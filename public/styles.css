@@ -1,0 +1,141 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  line-height: 1.5;
+  color: #e2e8f0;
+  background: radial-gradient(1200px 600px at 20% -10%, #312e81 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #1e3a5f 0%, transparent 50%),
+    #0f172a;
+}
+
+.auth-shell {
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+}
+
+.auth-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #a5b4fc;
+}
+
+.auth-lead {
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.auth-form {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #cbd5e1;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #f1f5f9;
+  font-size: 1rem;
+}
+
+.field input:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 1px;
+  border-color: #6366f1;
+}
+
+.form-error {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: #fca5a5;
+}
+
+.form-error[hidden] {
+  display: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dashboard-shell {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+.dashboard-shell h1 {
+  color: #a5b4fc;
+}
+
+.dashboard-actions {
+  margin-top: 1.5rem;
+}
+
+.btn-secondary {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  width: auto;
+}
+
+.btn-secondary:hover {
+  background: #334155;
+}
