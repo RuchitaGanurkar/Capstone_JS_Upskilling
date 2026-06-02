@@ -1,26 +1,36 @@
-/**
- * api/client.js — single place for HTTP (fetch) to json-server
- *
- * Day 28 — DAILY_TASKS.md:
- *   [ ] request(path, options) — prepend base URL http://localhost:3001; set JSON headers/body as needed
- *   [ ] On non-2xx: throw (fetch does NOT throw on 4xx/5xx — check response.ok)
- *   [ ] Parse JSON body; handle empty body if you need to
- *   [ ] Export shorthands: get, post, patch, del (and put if you want parity with Deskhub guide)
- *
- * Stretch (from Deskhub starter comments): read auth token from storage and attach Authorization if present.
- *
- * Pitfalls: network failures throw TypeError — you can catch and rethrow with a clearer message.
- */
+const API_BASE = "http://localhost:3001"; // mock API json-live server
 
-// const API_BASE = "http://localhost:3001";
+// request method captures URL, headers content
+// parse JSON received else throws error
+export async function request(path, options = {}) {
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  });
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+  if (!res.ok) {
+    const err = new Error(res.statusText || "Request failed");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
 
-// export async function request(path, options = {}) {
-//   // TODO Day 28
-// }
 
-// export const get = (path) => request(path, { method: "GET" });
-// export const post = (path, body) =>
-//   request(path, { method: "POST", body: JSON.stringify(body) });
-// export const patch = (path, body) =>
-//   request(path, { method: "PATCH", body: JSON.stringify(body) });
-// export const del = (path) => request(path, { method: "DELETE" });
+// short-hand all requests
+export const get = (path) => request(path, { method: "GET" });
+export const post = (path, body) =>
+  request(path, { method: "POST", body: JSON.stringify(body) });
+export const patch = (path, body) =>
+  request(path, { method: "PATCH", body: JSON.stringify(body) });
+export const del = (path) => request(path, { method: "DELETE" });

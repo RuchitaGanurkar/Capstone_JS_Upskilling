@@ -1,37 +1,37 @@
-/**
- * utility/storage.js — localStorage wrapper (Capstone uses utility/, not utils/)
- *
- * Day 28 — DAILY_TASKS.md (Deskhub/deskhub-starter/deskhub-starter/DAILY_TASKS.md):
- *   [ ] get(name)    — read key with a fixed prefix (e.g. deskhub:); JSON.parse; return null if missing
- *   [ ] set(name, value) — JSON.stringify (unless already a string); setItem
- *   [ ] remove(name)
- *   [ ] clear()      — remove only keys that use your prefix (do not clear all of localStorage)
- *
- * Done when: token + user survive a reload after login (see checklist "Done when").
- *
- * Pitfalls:
- *   - localStorage values are strings — parse on get, stringify on set
- *   - Never store the password here; only token + safe user fields
- */
+const PREFIX = "deskhub:"; // setting up prefix deskhub here
 
-// const PREFIX = "deskhub:";
+function key(k) {
+  return `${PREFIX}${k}`;
+}
 
-// function key(name) {
-//   return `${PREFIX}${name}`;
-// }
+// get method to catch key name
+export function get(name) {
+  const raw = localStorage.getItem(key(name));
+  if (raw === null) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
 
-// export function get(name) {
-//   // TODO Day 28
-// }
+// set method to set key name and values
+export function set(name, value) {
+  const payload = typeof value === "string" ? value : JSON.stringify(value);
+  localStorage.setItem(key(name), payload);
+}
 
-// export function set(name, value) {
-//   // TODO Day 28
-// }
+// remove method to clear name key
+export function remove(name) {
+  localStorage.removeItem(key(name));
+}
 
-// export function remove(name) {
-//   // TODO Day 28
-// }
-
-// export function clear() {
-//   // TODO Day 28
-// }
+// clear method to remove key name from localstorage
+export function clear() {
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(PREFIX)) toRemove.push(k);
+  }
+  toRemove.forEach((k) => localStorage.removeItem(k));
+}
