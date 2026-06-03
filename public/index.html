@@ -6,7 +6,7 @@
   <title>Capstone DeskHub</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="login">
 
   <!-- login form skeleton -->
   <main id="view-login" class="auth-shell">
@@ -33,9 +33,13 @@
   <!-- dashboard skeleton -->
   <main id="view-dashboard" class="dashboard-shell" hidden>
     <h1>You're in!</h1>
+    <p id="welcome-line" class="dashboard-welcome"></p>
+    <div>
+    <nav class="dashboard-nav" aria-label="App">
+      <a href="tickets.html" class="link-primary btn-as-link" id="nav-tickets">View tickets</a>
+    </nav>
+    </div>
     <div class="dashboard-actions">
-
-    <!-- logout button skeleton -->
       <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
     </div>
   </main>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tickets</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="tickets-list">
+
+  <main id="view-tickets" class="dashboard-tickets">
+    <div class="tickets-app">
+      <header class="tickets-header">
+        <div class="tickets-header brand">
+          <h1 class="tickets-title">Tickets</h1>
+        </div>
+        <nav class="tickets-header" aria-label="Tickets">
+          <a href="index.html" class="link-muted btn-as-link">Dashboard</a>
+          <button type="button" class="btn btn-secondary btn-sm" id="tickets-logout">Log out</button>
+        </nav>
+      </header>
+
+      <section class="tickets-toolbar" aria-label="Filters">
+        <div class="tickets-toolbar__row">
+          <label class="sr-only" for="tickets-search-slot">Search</label>
+          <input id="tickets-search-slot" class="input-slot" type="search" placeholder="Search" disabled aria-disabled="true">
+          <label class="sr-only" for="tickets-status-slot">Status</label>
+          <select id="tickets-status-slot" class="input-slot" disabled aria-disabled="true">
+            <option>Status</option>
+          </select>
+          <label class="sr-only" for="tickets-priority-slot">Priority</label>
+          <select id="tickets-priority-slot" class="input-slot" disabled aria-disabled="true">
+            <option>Priority</option>
+          </select>
+        </div>
+      </section>
+
+      <div id="tickets-loading" class="tickets-state tickets-state--loading" role="status" aria-live="polite">
+        <span class="tickets-spinner" aria-hidden="true"></span>
+        <span>Loading tickets…</span>
+      </div>
+
+      <div id="tickets-error" class="tickets-state tickets-state--error" hidden role="alert">
+        <p id="tickets-error-message" class="tickets-error-text"></p>
+        <button type="button" class="btn btn-primary btn-inline" id="tickets-retry">Retry</button>
+      </div>
+
+      <div id="tickets-empty" class="tickets-state tickets-state--empty" hidden>
+        <p>No tickets found</p>
+      </div>
+
+      <div id="tickets-table-wrap" class="tickets-table-wrap" hidden>
+        <table class="tickets-table" id="tickets-table">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Title</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Status</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Created</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/index.js"></script>
+</body>
+</html>
