@@ -1,5 +1,10 @@
 import { initApp } from "./modules/auth.js";
+import { initTicketsList } from "./modules/tickets.js";
 
-// initiate application
+const page = document.body?.dataset?.page;
 
-initApp();
+if (page === "tickets-list") {
+  initTicketsList();
+} else {
+  initApp();
+}
