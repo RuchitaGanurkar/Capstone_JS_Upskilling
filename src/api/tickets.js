@@ -1,7 +1,8 @@
-import { get, post, patch, del } from "./client.js";
+import { get, post, patch, del, getJsonWithTotalCount } from "./client.js";
 
-export function listTickets() {
-  return get("/tickets");
+export function listTickets(queryString) {
+  const path = queryString ? `/tickets?${queryString}` : "/tickets";
+  return getJsonWithTotalCount(path);
 }
 
 export function getTicket(id) {

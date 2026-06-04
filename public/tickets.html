@@ -22,15 +22,35 @@
 
       <section class="tickets-toolbar" aria-label="Filters">
         <div class="tickets-toolbar__row">
-          <label class="sr-only" for="tickets-search-slot">Search</label>
-          <input id="tickets-search-slot" class="input-slot" type="search" placeholder="Search" disabled aria-disabled="true">
-          <label class="sr-only" for="tickets-status-slot">Status</label>
-          <select id="tickets-status-slot" class="input-slot" disabled aria-disabled="true">
-            <option>Status</option>
+          <label class="sr-only" for="tickets-search">Search</label>
+          <input id="tickets-search" class="input-slot input-slot--live" type="search" placeholder="Search tickets" autocomplete="off">
+          <label class="sr-only" for="tickets-status">Status</label>
+          <select id="tickets-status" class="input-slot input-slot--live" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="open">open</option>
+            <option value="in-progress">in-progress</option>
+            <option value="resolved">resolved</option>
+            <option value="closed">closed</option>
           </select>
-          <label class="sr-only" for="tickets-priority-slot">Priority</label>
-          <select id="tickets-priority-slot" class="input-slot" disabled aria-disabled="true">
-            <option>Priority</option>
+          <label class="sr-only" for="tickets-priority">Priority</label>
+          <select id="tickets-priority" class="input-slot input-slot--live" aria-label="Filter by priority">
+            <option value="all">All priorities</option>
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+            <option value="urgent">urgent</option>
+          </select>
+        </div>
+        <div class="tickets-toolbar__row tickets-toolbar__row--secondary">
+          <label class="sr-only" for="tickets-assignee">Assignee</label>
+          <select id="tickets-assignee" class="input-slot input-slot--live" aria-label="Filter by assignee">
+            <option value="all">All assignees</option>
+          </select>
+          <label class="sr-only" for="tickets-sort">Sort</label>
+          <select id="tickets-sort" class="input-slot input-slot--live" aria-label="Sort tickets">
+            <option value="newest">Newest</option>
+            <option value="priority">Priority</option>
+            <option value="status">Status</option>
           </select>
         </div>
       </section>
@@ -64,6 +84,12 @@
           </thead>
           <tbody id="tickets-tbody"></tbody>
         </table>
+        <nav id="tickets-pagination" class="tickets-pagination" aria-label="Ticket pages">
+          <button type="button" class="btn btn-secondary btn-sm tickets-page-nav" id="tickets-page-prev" disabled>Prev</button>
+          <div id="tickets-page-numbers" class="tickets-page-numbers" role="group" aria-label="Page numbers"></div>
+          <span id="tickets-page-summary" class="tickets-page-summary"></span>
+          <button type="button" class="btn btn-secondary btn-sm tickets-page-nav" id="tickets-page-next">Next</button>
+        </nav>
       </div>
     </div>
   </main>
