@@ -52,3 +52,24 @@
 
 **Done when:** you can utilise all filters, paginations is allowed, and search is supported
 
+
+# Phase 4 - CRUD Operations
+
+**Goal:** user should be able to perform all CRUD operations
+
+ -   Create public/ticket-detail.html — ticket info shell + comments shell + action buttons
+ -   Implement src/modules/ticketDetail.js — initTicketDetail
+ -   Read ?id=N via new URLSearchParams(location.search)
+ -   Load ticket + comments + users in parallel with Promise.all
+ -   Render all ticket fields with proper formatting
+ -   Implement src/modules/ui.js — toast (auto-dismiss 3s), basic modal (Esc + click-outside to close), confirmDialog
+ -   Status dropdown that PATCHes on change — show toast on success
+ -   Priority dropdown that PATCHes on change
+ -   Assignee dropdown that PATCHes on change
+ -   Build "New Ticket" button on tickets list — opens modal
+ -   Implement src/modules/form.js — validators (required, minLength, maxLength, email, oneOf) + validateField + validateForm
+ -   Wire validation on the create form: blur shows inline error, submit re-validates all, submit disabled when invalid
+ -   On successful POST: close modal → refresh list → success toast
+ -   Delete button on detail page → confirmDialog → DELETE → redirect to list
+
+**Done when:** all operations are verified on seed data

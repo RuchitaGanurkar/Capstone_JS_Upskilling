@@ -3,6 +3,8 @@ import { get } from "../api/client.js";
 import * as ticketsApi from "../api/tickets.js";
 import { formatDate } from "../utils/formatDate.js";
 import { debounce } from "../utils/debounce.js";
+import { openModal, toast } from "./ui.js";
+import * as form from "./form.js";
 
 const PAGE_SIZE = 10;
 const FETCH_LIMIT = 500;
@@ -131,6 +133,9 @@ export function renderTable(tickets) {
   for (let i = 0; i < tickets.length; i++) {
     const t = tickets[i];
     const tr = document.createElement("tr");
+    tr.dataset.ticketId = String(t.id);
+    tr.className = "ticket-row--clickable";
+    tr.tabIndex = 0;
     const cells = [
       String(t.id),
       t.title || "",
@@ -246,6 +251,200 @@ export async function refresh() {
 
 const debouncedRefresh = debounce(refresh, 300);
 
+const CREATE_FIELDS = [
+  "title",
+  "description",
+  "customerName",
+  "customerEmail",
+  "status",
+  "priority",
+  "category",
+  "assignedTo",
+];
+
+function buildCreateSchema(assigneeIds) {
+  const assigneeValues = [""].concat(assigneeIds.map(String));
+  return {
+    title: [form.required(), form.minLength(3), form.maxLength(220)],
+    description: [form.required(), form.minLength(10), form.maxLength(8000)],
+    customerName: [form.required(), form.minLength(2), form.maxLength(120)],
+    customerEmail: [form.required(), form.email()],
+    status: [form.oneOf(["open", "in-progress", "resolved", "closed"])],
+    priority: [form.oneOf(["low", "medium", "high", "urgent"])],
+    category: [form.oneOf(["auth", "billing", "bug", "feature"])],
+    assignedTo: [form.oneOf(assigneeValues, "Invalid assignee")],
+  };
+}
+
+function readCreateFormData(formEl) {
+  function v(id) {
+    const el = formEl.querySelector("#" + id);
+    return el ? el.value : "";
+  }
+  return {
+    title: v("create-title").trim(),
+    description: v("create-description").trim(),
+    customerName: v("create-customerName").trim(),
+    customerEmail: v("create-customerEmail").trim(),
+    status: v("create-status"),
+    priority: v("create-priority"),
+    category: v("create-category"),
+    assignedTo: v("create-assignedTo"),
+  };
+}
+
+function setCreateFieldError(formEl, name, message) {
+  const err = formEl.querySelector("#create-" + name + "-err");
+  if (!err) return;
+  if (message) {
+    err.textContent = message;
+    err.hidden = false;
+  } else {
+    err.textContent = "";
+    err.hidden = true;
+  }
+}
+
+function updateCreateSubmitState(schema, formEl) {
+  const data = readCreateFormData(formEl);
+  const submit = formEl.querySelector("#create-submit");
+  const r = form.validateForm(schema, data);
+  if (submit) submit.disabled = !r.valid;
+}
+
+function openCreateTicketModal() {
+  if (document.querySelector(".modal-backdrop")) return;
+  let closeModal = function () {};
+
+  get("/users")
+    .catch(function () {
+      return [];
+    })
+    .then(function (usersRaw) {
+      const users = Array.isArray(usersRaw) ? usersRaw : [];
+      const assigneeIds = users.map(function (u) {
+        return u.id;
+      });
+      const schema = buildCreateSchema(assigneeIds);
+
+      const tpl = document.getElementById("tpl-create-ticket");
+      if (!tpl || !tpl.content) return;
+
+      const wrap = document.createElement("div");
+      wrap.appendChild(tpl.content.cloneNode(true));
+      const formEl = wrap.querySelector("#create-ticket-form");
+      if (!formEl) return;
+
+      const assigneeSel = formEl.querySelector("#create-assignedTo");
+      if (assigneeSel) {
+        assigneeSel.innerHTML = "";
+        const o0 = document.createElement("option");
+        o0.value = "";
+        o0.textContent = "Unassigned";
+        assigneeSel.appendChild(o0);
+        const sorted = users.slice().sort(function (a, b) {
+          return String(a.name || "").localeCompare(String(b.name || ""));
+        });
+        for (let i = 0; i < sorted.length; i++) {
+          const u = sorted[i];
+          const o = document.createElement("option");
+          o.value = String(u.id);
+          o.textContent = u.name || "User #" + u.id;
+          assigneeSel.appendChild(o);
+        }
+      }
+
+      formEl.reset();
+      const genErr = formEl.querySelector("#create-ticket-form-error");
+      if (genErr) {
+        genErr.textContent = "";
+        genErr.hidden = true;
+      }
+      for (let i = 0; i < CREATE_FIELDS.length; i++) {
+        setCreateFieldError(formEl, CREATE_FIELDS[i], null);
+      }
+
+      function onInput() {
+        updateCreateSubmitState(schema, formEl);
+      }
+
+      for (let i = 0; i < CREATE_FIELDS.length; i++) {
+        const name = CREATE_FIELDS[i];
+        const el = formEl.querySelector("#create-" + name);
+        if (el) {
+          el.addEventListener("input", onInput);
+          el.addEventListener("change", onInput);
+          el.addEventListener("blur", function () {
+            const data = readCreateFormData(formEl);
+            const rules = schema[name];
+            if (!rules) return;
+            const err = form.validateField(name, data[name], rules);
+            setCreateFieldError(formEl, name, err);
+            updateCreateSubmitState(schema, formEl);
+          });
+        }
+      }
+
+      updateCreateSubmitState(schema, formEl);
+
+      const cancel = formEl.querySelector("#create-cancel");
+      if (cancel) {
+        cancel.addEventListener("click", function () {
+          closeModal();
+        });
+      }
+
+      formEl.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const data = readCreateFormData(formEl);
+        const r = form.validateForm(schema, data);
+        for (let i = 0; i < CREATE_FIELDS.length; i++) {
+          const k = CREATE_FIELDS[i];
+          setCreateFieldError(formEl, k, r.errors[k] || null);
+        }
+        updateCreateSubmitState(schema, formEl);
+        if (!r.valid) return;
+
+        const now = new Date().toISOString();
+        const body = {
+          title: data.title,
+          description: data.description,
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          status: data.status,
+          priority: data.priority,
+          category: data.category,
+          assignedTo: data.assignedTo === "" ? null : parseInt(data.assignedTo, 10),
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        try {
+          await ticketsApi.createTicket(body);
+          toast("Ticket created", { variant: "success" });
+          closeModal();
+          listState.page = 1;
+          await refresh();
+        } catch (err) {
+          const msg =
+            err && err.data && typeof err.data === "string"
+              ? err.data
+              : "Could not create ticket.";
+          if (genErr) {
+            genErr.textContent = msg;
+            genErr.hidden = false;
+          }
+          toast("Create failed", { variant: "error" });
+        }
+      });
+
+      closeModal = openModal({
+        title: "New ticket",
+        panel: wrap,
+      });
+    });
+}
+
 export function initTicketsList() {
   if (document.body && document.body.dataset.page !== "tickets-list") return;
   if (!document.getElementById("view-tickets")) return;
@@ -328,6 +527,27 @@ export function initTicketsList() {
     document.getElementById("tickets-logout").addEventListener("click", function () {
       authApi.logout();
       window.location.replace("index.html");
+    });
+
+  const tbody = document.getElementById("tickets-tbody");
+  if (tbody) {
+    tbody.addEventListener("click", function (e) {
+      const tr = e.target.closest("tr[data-ticket-id]");
+      if (!tr) return;
+      window.location.href = "ticket-detail.html?id=" + encodeURIComponent(tr.dataset.ticketId || "");
+    });
+    tbody.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const tr = e.target.closest("tr[data-ticket-id]");
+      if (!tr) return;
+      e.preventDefault();
+      window.location.href = "ticket-detail.html?id=" + encodeURIComponent(tr.dataset.ticketId || "");
+    });
+  }
+
+  document.getElementById("tickets-new") &&
+    document.getElementById("tickets-new").addEventListener("click", function () {
+      openCreateTicketModal();
     });
 
   refresh();

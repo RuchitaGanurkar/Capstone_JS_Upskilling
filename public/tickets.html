@@ -15,6 +15,7 @@
           <h1 class="tickets-title">Tickets</h1>
         </div>
         <nav class="tickets-header" aria-label="Tickets">
+          <button type="button" class="btn btn-primary btn-sm" id="tickets-new">New Ticket</button>
           <a href="index.html" class="link-muted btn-as-link">Dashboard</a>
           <button type="button" class="btn btn-secondary btn-sm" id="tickets-logout">Log out</button>
         </nav>
@@ -93,6 +94,79 @@
       </div>
     </div>
   </main>
+
+  <template id="tpl-create-ticket">
+    <form id="create-ticket-form" class="create-ticket-form" novalidate>
+      <div class="create-ticket-form__fields">
+        <div class="field">
+          <label for="create-title">Title</label>
+          <input id="create-title" name="title" type="text" autocomplete="off">
+          <p class="field-error" id="create-title-err" hidden role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="create-description">Description</label>
+          <textarea id="create-description" name="description" rows="4"></textarea>
+          <p class="field-error" id="create-description-err" hidden role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="create-customerName">Customer name</label>
+          <input id="create-customerName" name="customerName" type="text" autocomplete="name">
+          <p class="field-error" id="create-customerName-err" hidden role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="create-customerEmail">Customer email</label>
+          <input id="create-customerEmail" name="customerEmail" type="email" autocomplete="email">
+          <p class="field-error" id="create-customerEmail-err" hidden role="alert"></p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="create-status">Status</label>
+            <select id="create-status" name="status">
+              <option value="open">open</option>
+              <option value="in-progress">in-progress</option>
+              <option value="resolved">resolved</option>
+              <option value="closed">closed</option>
+            </select>
+            <p class="field-error" id="create-status-err" hidden role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="create-priority">Priority</label>
+            <select id="create-priority" name="priority">
+              <option value="low">low</option>
+              <option value="medium" selected>medium</option>
+              <option value="high">high</option>
+              <option value="urgent">urgent</option>
+            </select>
+            <p class="field-error" id="create-priority-err" hidden role="alert"></p>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="create-category">Category</label>
+            <select id="create-category" name="category">
+              <option value="auth">auth</option>
+              <option value="billing">billing</option>
+              <option value="bug">bug</option>
+              <option value="feature">feature</option>
+            </select>
+            <p class="field-error" id="create-category-err" hidden role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="create-assignedTo">Assignee</label>
+            <select id="create-assignedTo" name="assignedTo">
+              <option value="">Unassigned</option>
+            </select>
+            <p class="field-error" id="create-assignedTo-err" hidden role="alert"></p>
+          </div>
+        </div>
+      </div>
+      <p id="create-ticket-form-error" class="form-error" role="alert" hidden></p>
+      <div class="create-ticket-form__actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="create-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="create-submit">Create</button>
+      </div>
+    </form>
+  </template>
 
   <script type="module" src="/src/index.js"></script>
 </body>
