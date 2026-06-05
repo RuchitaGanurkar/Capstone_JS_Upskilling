@@ -6,12 +6,15 @@
   "type": "module",
   "scripts": {
     "api": "json-server --watch seedData.json --port 3001 --delay 200",
+    "start": "json-server --watch seedData.json --host 0.0.0.0 --port ${PORT:-3001}",
     "serve": "live-server . --port=8080 --no-browser",
     "dev": "concurrently --names \"api,ui\" --prefix-colors \"yellow,cyan\" \"npm:api\" \"npm:serve\""
   },
+  "dependencies": {
+    "json-server": "^0.17.4"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "json-server": "^0.17.4",
     "live-server": "^1.2.2"
   }
 }

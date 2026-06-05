@@ -1,4 +1,7 @@
-const API_BASE = "http://localhost:3001";
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3001"
+    : "https://capstone-js-upskilling-server.onrender.com";
 const DEFAULT_TIMEOUT_MS = 15_000;
 
 function mergeSignal(callerSignal) {
