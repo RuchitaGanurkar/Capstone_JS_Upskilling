@@ -33,3 +33,12 @@ export function listComments(ticketId) {
 export function addComment(body) {
   return post("/comments", body);
 }
+
+export function updateComment(commentId, body) {
+  return patch(`/comments/${encodeURIComponent(commentId)}`, body);
+}
+
+export function getTicketsCount(queryString) {
+  const qs = queryString && String(queryString).trim() ? queryString : "_limit=1";
+  return getJsonWithTotalCount(`/tickets?${qs}`);
+}

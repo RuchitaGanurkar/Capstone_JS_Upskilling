@@ -16,7 +16,8 @@
         </div>
         <nav class="tickets-header" aria-label="Tickets">
           <button type="button" class="btn btn-primary btn-sm" id="tickets-new">New Ticket</button>
-          <a href="index.html" class="link-muted btn-as-link">Dashboard</a>
+          <a href="dashboard.html" class="link-muted btn-as-link">Dashboard</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-theme-toggle aria-label="Switch color theme"></button>
           <button type="button" class="btn btn-secondary btn-sm" id="tickets-logout">Log out</button>
         </nav>
       </header>
@@ -81,6 +82,7 @@
               <th scope="col">Status</th>
               <th scope="col">Assignee</th>
               <th scope="col">Created</th>
+              <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody id="tickets-tbody"></tbody>

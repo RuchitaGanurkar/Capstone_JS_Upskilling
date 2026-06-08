@@ -1,3 +1,13 @@
+## Quick Start
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Run the API + UI together (one command)
+npm run dev
+```
+
 # Phase 1 - Foundations & Login
 
 **Goal:** get the dev loop running, build the login flow end-to-end
@@ -73,3 +83,18 @@
  -   Delete button on detail page → confirmDialog → DELETE → redirect to list
 
 **Done when:** all operations are verified on seed data
+
+# Phase 5 - Comment Section
+
+- Add comments thread on detail page — list existing (sorted by createdAt asc), textarea + button to add new
+- On comment submit — POST → re-fetch comments → render → clear textarea
+- Build public/dashboard.html — 4 stat cards: Total / Open / In-Progress / Resolved
+- Stats cards use the count from X-Total-Count for each filtered query (4 small fetches in parallel)
+- Add "Recent 5 tickets" section on dashboard with link to detail pages
+- Polish ui.js — toast queue (multiple stack), simple modal animation, full-screen loader for slow ops
+- Add empty states wherever required
+- Polish CSS — consistent spacing scale, decent typography, responsive at 768px+, hover/focus states
+- Stretch goal: light & dark mode
+
+
+**Done when:** able to write comment to ticket, edit. dashbaord has 4 statistics cards and facility of light & dark mode

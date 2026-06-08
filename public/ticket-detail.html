@@ -15,8 +15,9 @@
           <h1 class="tickets-title" id="detail-heading">Ticket</h1>
         </div>
         <nav class="tickets-header" aria-label="Ticket actions">
-          <a href="tickets.html" class="link-muted btn-as-link">← Back to list</a>
-          <a href="index.html" class="link-muted btn-as-link">Dashboard</a>
+          <a href="tickets.html" class="btn btn-secondary btn-sm detail-back-nav" id="detail-back-tickets">All tickets</a>
+          <a href="dashboard.html" class="link-muted btn-as-link">Dashboard</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-theme-toggle aria-label="Switch color theme"></button>
           <button type="button" class="btn btn-secondary btn-sm" id="detail-logout">Log out</button>
         </nav>
       </header>
@@ -92,6 +93,13 @@
           <h3 id="comments-heading" class="detail-comments__title">Comments</h3>
           <ul id="detail-comments-list" class="detail-comments-list"></ul>
           <p id="detail-comments-empty" class="detail-comments-empty" hidden>No comments yet.</p>
+          <form id="detail-comment-form" class="detail-comment-form" novalidate>
+            <label class="sr-only" for="detail-comment-input">New comment</label>
+            <textarea id="detail-comment-input" class="detail-comment-input input-slot input-slot--live" name="content" rows="3" placeholder="Write a comment…" required></textarea>
+            <div class="detail-comment-form__actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="detail-comment-submit">Add comment</button>
+            </div>
+          </form>
         </section>
       </article>
     </div>

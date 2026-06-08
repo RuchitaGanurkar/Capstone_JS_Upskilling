@@ -12,12 +12,11 @@ export function syncAuthViews() {
   if (authed) {
     const user = authApi.getCurrentUser();
     if (welcome && user) {
-      welcome.textContent = `Signed in as ${user.name} (${user.email}).`;
+      welcome.textContent = "Signed in as " + user.name + " (" + user.email + ").";
     }
   }
 }
 
-// event listeners are caught here
 export function initApp() {
   const form = document.getElementById("login-form");
   const emailInput = document.getElementById("email");
@@ -26,14 +25,12 @@ export function initApp() {
   const submitBtn = document.getElementById("login-submit");
   const logoutBtn = document.getElementById("logout-btn");
 
-  // show error method with text content of message
   function showError(msg) {
     if (!errorEl) return;
     errorEl.textContent = msg;
     errorEl.hidden = false;
   }
 
-  // clear error method with text content removed
   function clearError() {
     if (!errorEl) return;
     errorEl.textContent = "";
@@ -41,9 +38,6 @@ export function initApp() {
   }
 
   syncAuthViews();
-
-  // event listerner on form when submit action is performed
-  // check email, password, submit button action and before performing default action
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -62,7 +56,6 @@ export function initApp() {
     }
   });
 
-  // event listener on logout button when click action is performed
   logoutBtn?.addEventListener("click", () => {
     authApi.logout();
     clearError();

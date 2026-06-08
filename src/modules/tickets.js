@@ -3,7 +3,7 @@ import { get } from "../api/client.js";
 import * as ticketsApi from "../api/tickets.js";
 import { formatDate } from "../utils/formatDate.js";
 import { debounce } from "../utils/debounce.js";
-import { openModal, toast } from "./ui.js";
+import { openModal, toast, showFullScreenLoader, hideFullScreenLoader } from "./ui.js";
 import * as form from "./form.js";
 
 const PAGE_SIZE = 10;
@@ -126,6 +126,13 @@ function sortRows(rows, sortKey) {
   });
 }
 
+function assigneeLabel(id) {
+  if (id == null) return "None";
+  if (!usersById) return "User #" + id;
+  const u = usersById.get(id);
+  return u && u.name ? u.name : "User #" + id;
+}
+
 export function renderTable(tickets) {
   const tbody = document.getElementById("tickets-tbody");
   if (!tbody) return;
@@ -134,24 +141,50 @@ export function renderTable(tickets) {
     const t = tickets[i];
     const tr = document.createElement("tr");
     tr.dataset.ticketId = String(t.id);
-    tr.className = "ticket-row--clickable";
-    tr.tabIndex = 0;
-    const cells = [
-      String(t.id),
-      t.title || "",
-      t.customerName || "",
-      t.priority || "",
-      t.status || "",
-      t.assignedTo == null ? "None" : usersById && usersById.get(t.assignedTo)
-        ? usersById.get(t.assignedTo).name
-        : "User #" + t.assignedTo,
-      formatDate(t.createdAt),
-    ];
-    for (let j = 0; j < cells.length; j++) {
-      const td = document.createElement("td");
-      td.textContent = cells[j];
-      tr.appendChild(td);
-    }
+    const detailHref = "ticket-detail.html?id=" + encodeURIComponent(String(t.id));
+
+    const tdId = document.createElement("td");
+    const idLink = document.createElement("a");
+    idLink.className = "ticket-id-link";
+    idLink.href = detailHref;
+    idLink.textContent = String(t.id);
+    tdId.appendChild(idLink);
+
+    const tdTitle = document.createElement("td");
+    tdTitle.textContent = t.title || "";
+
+    const tdCust = document.createElement("td");
+    tdCust.textContent = t.customerName || "";
+
+    const tdPri = document.createElement("td");
+    tdPri.textContent = t.priority || "";
+
+    const tdSt = document.createElement("td");
+    tdSt.textContent = t.status || "";
+
+    const tdAs = document.createElement("td");
+    tdAs.textContent = assigneeLabel(t.assignedTo);
+
+    const tdCreated = document.createElement("td");
+    tdCreated.textContent = formatDate(t.createdAt);
+
+    const tdActions = document.createElement("td");
+    tdActions.className = "tickets-actions-cell";
+    const editLink = document.createElement("a");
+    editLink.href = detailHref;
+    editLink.className = "btn btn-sm btn-edit-ticket";
+    editLink.textContent = "Edit";
+    editLink.setAttribute("aria-label", "Open ticket #" + t.id + " to view and edit");
+    tdActions.appendChild(editLink);
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdTitle);
+    tr.appendChild(tdCust);
+    tr.appendChild(tdPri);
+    tr.appendChild(tdSt);
+    tr.appendChild(tdAs);
+    tr.appendChild(tdCreated);
+    tr.appendChild(tdActions);
     frag.appendChild(tr);
   }
   tbody.replaceChildren(frag);
@@ -420,6 +453,7 @@ function openCreateTicketModal() {
         };
 
         try {
+          showFullScreenLoader("Creating ticket…");
           await ticketsApi.createTicket(body);
           toast("Ticket created", { variant: "success" });
           closeModal();
@@ -435,6 +469,8 @@ function openCreateTicketModal() {
             genErr.hidden = false;
           }
           toast("Create failed", { variant: "error" });
+        } finally {
+          hideFullScreenLoader();
         }
       });
 
@@ -528,22 +564,6 @@ export function initTicketsList() {
       authApi.logout();
       window.location.replace("index.html");
     });
-
-  const tbody = document.getElementById("tickets-tbody");
-  if (tbody) {
-    tbody.addEventListener("click", function (e) {
-      const tr = e.target.closest("tr[data-ticket-id]");
-      if (!tr) return;
-      window.location.href = "ticket-detail.html?id=" + encodeURIComponent(tr.dataset.ticketId || "");
-    });
-    tbody.addEventListener("keydown", function (e) {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      const tr = e.target.closest("tr[data-ticket-id]");
-      if (!tr) return;
-      e.preventDefault();
-      window.location.href = "ticket-detail.html?id=" + encodeURIComponent(tr.dataset.ticketId || "");
-    });
-  }
 
   document.getElementById("tickets-new") &&
     document.getElementById("tickets-new").addEventListener("click", function () {

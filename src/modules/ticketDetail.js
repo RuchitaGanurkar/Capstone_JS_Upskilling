@@ -2,7 +2,7 @@ import * as authApi from "../api/auth.js";
 import { get } from "../api/client.js";
 import * as ticketsApi from "../api/tickets.js";
 import { formatDateTime } from "../utils/formatDate.js";
-import { toast, confirmDialog } from "./ui.js";
+import { toast, confirmDialog, showFullScreenLoader, hideFullScreenLoader } from "./ui.js";
 
 let ticketId = null;
 let currentTicket = null;
@@ -95,6 +95,61 @@ function fillTicket(t) {
   }
 }
 
+function beginCommentEdit(li, c, bodyEl, actionsEl) {
+  const ta = document.createElement("textarea");
+  ta.className = "detail-comment__editor input-slot input-slot--live";
+  ta.rows = 4;
+  ta.value = bodyEl.textContent || "";
+  bodyEl.replaceWith(ta);
+  actionsEl.replaceChildren();
+
+  const row = document.createElement("div");
+  row.className = "detail-comment-edit-actions";
+
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.className = "btn btn-secondary btn-xs";
+  cancel.textContent = "Cancel";
+
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "btn btn-primary btn-xs";
+  save.textContent = "Save";
+
+  async function reloadComments() {
+    const list = await ticketsApi.listComments(ticketId);
+    fillComments(list);
+  }
+
+  cancel.addEventListener("click", function () {
+    reloadComments().catch(function () {
+      toast("Could not reload comments", { variant: "error" });
+    });
+  });
+
+  save.addEventListener("click", async function () {
+    const text = ta.value.trim();
+    if (!text) {
+      toast("Comment cannot be empty", { variant: "error" });
+      return;
+    }
+    showFullScreenLoader("Saving comment…");
+    try {
+      await ticketsApi.updateComment(c.id, { content: text });
+      await reloadComments();
+      toast("Comment updated", { variant: "success" });
+    } catch (e) {
+      toast("Could not update comment", { variant: "error" });
+    } finally {
+      hideFullScreenLoader();
+    }
+  });
+
+  row.appendChild(cancel);
+  row.appendChild(save);
+  actionsEl.appendChild(row);
+}
+
 function fillComments(list) {
   const ul = document.getElementById("detail-comments-list");
   const empty = document.getElementById("detail-comments-empty");
@@ -102,6 +157,9 @@ function fillComments(list) {
 
   ul.replaceChildren();
   const arr = Array.isArray(list) ? list : [];
+  arr.sort(function (a, b) {
+    return String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+  });
 
   if (arr.length === 0) {
     if (empty) empty.hidden = false;
@@ -109,13 +167,19 @@ function fillComments(list) {
   }
   if (empty) empty.hidden = true;
 
+  const me = authApi.getCurrentUser();
+
   for (let i = 0; i < arr.length; i++) {
     const c = arr[i];
     const li = document.createElement("li");
     li.className = "detail-comment";
+    li.dataset.commentId = String(c.id);
 
     const head = document.createElement("div");
     head.className = "detail-comment__head";
+
+    const meta = document.createElement("div");
+    meta.className = "detail-comment__meta";
 
     const author = document.createElement("span");
     author.className = "detail-comment__author";
@@ -126,8 +190,9 @@ function fillComments(list) {
     when.dateTime = c.createdAt || "";
     when.textContent = formatDateTime(c.createdAt);
 
-    head.appendChild(author);
-    head.appendChild(when);
+    meta.appendChild(author);
+    meta.appendChild(when);
+    head.appendChild(meta);
 
     const body = document.createElement("p");
     body.className = "detail-comment__body";
@@ -135,6 +200,25 @@ function fillComments(list) {
 
     li.appendChild(head);
     li.appendChild(body);
+
+    const actions = document.createElement("div");
+    actions.className = "detail-comment__actions";
+
+    const canEdit =
+      me && me.id != null && c.authorId != null && Number(me.id) === Number(c.authorId);
+    if (canEdit) {
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-xs btn-comment-edit";
+      editBtn.textContent = "Edit comment";
+      editBtn.setAttribute("aria-label", "Edit this comment");
+      editBtn.addEventListener("click", function () {
+        beginCommentEdit(li, c, body, actions);
+      });
+      actions.appendChild(editBtn);
+      li.appendChild(actions);
+    }
+
     ul.appendChild(li);
   }
 }
@@ -267,6 +351,41 @@ export function initTicketDetail() {
       } catch (e) {
         toast("Update failed", { variant: "error" });
         syncAssigneeSelect(as);
+      }
+    });
+  }
+
+  const commentForm = document.getElementById("detail-comment-form");
+  const commentInput = document.getElementById("detail-comment-input");
+  if (commentForm && commentInput) {
+    commentForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const content = commentInput.value.trim();
+      if (!content) {
+        toast("Write a comment first", { variant: "error" });
+        return;
+      }
+      const user = authApi.getCurrentUser();
+      if (!user || user.id == null) {
+        toast("You must be signed in to comment", { variant: "error" });
+        return;
+      }
+      showFullScreenLoader("Posting comment…");
+      try {
+        await ticketsApi.addComment({
+          ticketId: ticketId,
+          authorId: user.id,
+          content: content,
+          createdAt: new Date().toISOString(),
+        });
+        const comments = await ticketsApi.listComments(ticketId);
+        fillComments(comments);
+        commentInput.value = "";
+        toast("Comment added", { variant: "success" });
+      } catch (err) {
+        toast("Could not add comment", { variant: "error" });
+      } finally {
+        hideFullScreenLoader();
       }
     });
   }

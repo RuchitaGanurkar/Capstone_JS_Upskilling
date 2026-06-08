@@ -8,7 +8,10 @@
 </head>
 <body data-page="login">
 
-  <!-- login form skeleton -->
+  <div class="app-top-bar">
+    <button type="button" class="btn btn-secondary btn-sm theme-toggle-pill" data-theme-toggle aria-label="Switch color theme"></button>
+  </div>
+
   <main id="view-login" class="auth-shell">
     <header class="auth-header">
       <h1>Capstone DeskHub</h1>
@@ -25,20 +28,17 @@
       </div>
       <p id="login-error" class="form-error" role="alert" hidden></p>
 
-    <!-- submit button skeleton -->
       <button type="submit" class="btn btn-primary" id="login-submit">Sign in</button>
     </form>
   </main>
 
-  <!-- dashboard skeleton -->
   <main id="view-dashboard" class="dashboard-shell" hidden>
     <h1>You're in!</h1>
     <p id="welcome-line" class="dashboard-welcome"></p>
-    <div>
     <nav class="dashboard-nav" aria-label="App">
-      <a href="tickets.html" class="link-primary btn-as-link" id="nav-tickets">View tickets</a>
+      <a href="dashboard.html" class="btn btn-primary btn-sm dashboard-nav-btn" id="nav-dashboard">Dashboard</a>
+      <a href="tickets.html" class="btn btn-secondary btn-sm dashboard-nav-btn" id="nav-all-tickets">All tickets</a>
     </nav>
-    </div>
     <div class="dashboard-actions">
       <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
     </div>
