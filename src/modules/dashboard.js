@@ -1,52 +1,11 @@
 import * as authApi from "../api/auth.js";
 import * as ticketsApi from "../api/tickets.js";
-import { formatDate } from "../utils/formatDate.js";
-
-function countQs(extra) {
-  const p = new URLSearchParams({ _limit: "1" });
-  if (extra) {
-    for (const k in extra) {
-      if (Object.prototype.hasOwnProperty.call(extra, k)) p.set(k, extra[k]);
-    }
-  }
-  return p.toString();
-}
+import { fetchDashboardCounts } from "./ticketStats.js";
+import { renderRecentTicketLinks } from "./recentTicketsList.js";
 
 function setStat(id, n) {
   const el = document.getElementById(id);
   if (el) el.textContent = n != null && Number.isFinite(n) ? String(n) : "—";
-}
-
-function renderRecent(tickets) {
-  const ul = document.getElementById("dash-recent-list");
-  const empty = document.getElementById("dash-recent-empty");
-  if (!ul) return;
-  ul.replaceChildren();
-  const list = Array.isArray(tickets) ? tickets : [];
-  if (list.length === 0) {
-    if (empty) empty.hidden = false;
-    return;
-  }
-  if (empty) empty.hidden = true;
-  for (let i = 0; i < list.length; i++) {
-    const t = list[i];
-    const li = document.createElement("li");
-    li.className = "dash-recent-item";
-    const a = document.createElement("a");
-    a.className = "dash-recent-link";
-    a.href = "ticket-detail.html?id=" + encodeURIComponent(String(t.id));
-    const title = document.createElement("span");
-    title.className = "dash-recent-link__title";
-    title.textContent = t.title || "Ticket #" + t.id;
-    const meta = document.createElement("span");
-    meta.className = "dash-recent-link__meta";
-    meta.textContent =
-      "#" + t.id + " · " + (t.status || "—") + " · " + formatDate(t.createdAt);
-    a.appendChild(title);
-    a.appendChild(meta);
-    li.appendChild(a);
-    ul.appendChild(li);
-  }
 }
 
 async function loadDashboard() {
@@ -66,19 +25,16 @@ async function loadDashboard() {
       _limit: "5",
     }).toString();
 
-    const [totalRes, openRes, progRes, resolvedRes, recentRes] = await Promise.all([
-      ticketsApi.getTicketsCount(countQs()),
-      ticketsApi.getTicketsCount(countQs({ status: "open" })),
-      ticketsApi.getTicketsCount(countQs({ status: "in-progress" })),
-      ticketsApi.getTicketsCount(countQs({ status: "resolved" })),
+    const [counts, recentRes] = await Promise.all([
+      fetchDashboardCounts(),
       ticketsApi.listTickets(recentQs),
     ]);
 
-    setStat("dash-stat-total", totalRes.totalCount);
-    setStat("dash-stat-open", openRes.totalCount);
-    setStat("dash-stat-inprogress", progRes.totalCount);
-    setStat("dash-stat-resolved", resolvedRes.totalCount);
-    renderRecent(recentRes.data || []);
+    setStat("dash-stat-total", counts.total);
+    setStat("dash-stat-open", counts.open);
+    setStat("dash-stat-inprogress", counts.inprogress);
+    setStat("dash-stat-resolved", counts.resolved);
+    renderRecentTicketLinks("dash-recent-list", "dash-recent-empty", recentRes.data || []);
 
     if (shell) shell.hidden = false;
   } catch (err) {

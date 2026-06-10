@@ -9,6 +9,10 @@
 <body data-page="login">
 
   <div class="app-top-bar">
+    <div id="app-top-bar-authed" class="app-top-bar__leading" hidden>
+      <a href="tickets.html" class="btn btn-secondary btn-sm app-top-bar__link" id="top-all-tickets">All tickets</a>
+      <button type="button" class="btn btn-secondary btn-sm" id="top-logout-btn">Log out</button>
+    </div>
     <button type="button" class="btn btn-secondary btn-sm theme-toggle-pill" data-theme-toggle aria-label="Switch color theme"></button>
   </div>
 
@@ -32,16 +36,49 @@
     </form>
   </main>
 
-  <main id="view-dashboard" class="dashboard-shell" hidden>
+  <main id="view-dashboard" class="dashboard-shell dashboard-shell--with-stats" hidden>
     <h1>You're in!</h1>
     <p id="welcome-line" class="dashboard-welcome"></p>
-    <nav class="dashboard-nav" aria-label="App">
-      <a href="dashboard.html" class="btn btn-primary btn-sm dashboard-nav-btn" id="nav-dashboard">Dashboard</a>
-      <a href="tickets.html" class="btn btn-secondary btn-sm dashboard-nav-btn" id="nav-all-tickets">All tickets</a>
-    </nav>
-    <div class="dashboard-actions">
-      <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+
+    <div id="home-dash-loading" class="tickets-state tickets-state--loading home-dash-loading" role="status" aria-live="polite">
+      <span class="tickets-spinner" aria-hidden="true"></span>
+      <span>Loading dashboard…</span>
     </div>
+    <div id="home-dash-error" class="tickets-state tickets-state--error home-dash-error" hidden role="alert">
+      <p id="home-dash-error-message" class="tickets-error-text"></p>
+      <button type="button" class="btn btn-primary btn-inline" id="home-dash-retry">Retry</button>
+    </div>
+
+    <section id="home-dash-stats" class="dash-stats home-dash-stats" aria-label="Ticket counts" hidden>
+      <article class="dash-stat-card">
+        <h2 class="dash-stat-card__label">Total</h2>
+        <p class="dash-stat-card__value" id="home-stat-total">—</p>
+      </article>
+      <article class="dash-stat-card">
+        <h2 class="dash-stat-card__label">Open</h2>
+        <p class="dash-stat-card__value" id="home-stat-open">—</p>
+      </article>
+      <article class="dash-stat-card">
+        <h2 class="dash-stat-card__label">In progress</h2>
+        <p class="dash-stat-card__value" id="home-stat-inprogress">—</p>
+      </article>
+      <article class="dash-stat-card">
+        <h2 class="dash-stat-card__label">Resolved</h2>
+        <p class="dash-stat-card__value" id="home-stat-resolved">—</p>
+      </article>
+    </section>
+
+    <section
+      id="home-dash-recent"
+      class="dash-recent home-dash-recent"
+      aria-labelledby="home-recent-heading"
+      aria-keyshortcuts="ArrowUp ArrowDown"
+      hidden
+    >
+      <h2 id="home-recent-heading" class="dash-recent__title">Recent tickets</h2>
+      <ul id="home-recent-list" class="dash-recent-list"></ul>
+      <p id="home-recent-empty" class="dash-recent-empty" hidden>No tickets yet.</p>
+    </section>
   </main>
 
   <script type="module" src="/src/index.js"></script>

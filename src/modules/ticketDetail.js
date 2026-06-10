@@ -43,6 +43,33 @@ function nameForUser(id) {
   return "User #" + id;
 }
 
+function setDetailTextEditMode(on) {
+  const titleEl = document.getElementById("detail-title");
+  const panel = document.getElementById("detail-edit-panel");
+  const custBlock = document.getElementById("detail-block-customer");
+  const descBlock = document.getElementById("detail-block-description");
+  const btnEdit = document.getElementById("detail-edit");
+  if (panel) panel.hidden = !on;
+  if (titleEl) titleEl.hidden = on;
+  if (custBlock) custBlock.hidden = on;
+  if (descBlock) descBlock.hidden = on;
+  if (btnEdit) {
+    btnEdit.textContent = on ? "Editing…" : "Edit ticket";
+    btnEdit.disabled = on;
+  }
+}
+
+function syncDetailEditInputsFromTicket(t) {
+  const ti = document.getElementById("detail-edit-title");
+  const cn = document.getElementById("detail-edit-customerName");
+  const ce = document.getElementById("detail-edit-customerEmail");
+  const de = document.getElementById("detail-edit-description");
+  if (ti) ti.value = t.title || "";
+  if (cn) cn.value = t.customerName || "";
+  if (ce) ce.value = t.customerEmail || "";
+  if (de) de.value = t.description || "";
+}
+
 function fillTicket(t) {
   currentTicket = t;
 
@@ -54,6 +81,7 @@ function fillTicket(t) {
   set("detail-heading", "Ticket #" + t.id);
   set("detail-id", String(t.id));
   set("detail-title", t.title || "");
+  syncDetailEditInputsFromTicket(t);
   set("detail-category", t.category || "—");
   set("detail-created", formatDateTime(t.createdAt));
   set("detail-updated", formatDateTime(t.updatedAt));
@@ -225,6 +253,7 @@ function fillComments(list) {
 
 async function loadAll() {
   if (ticketId == null) return;
+  setDetailTextEditMode(false);
   showLoading(true);
   showError(false, "");
 
@@ -301,12 +330,78 @@ export function initTicketDetail() {
         cancelText: "No",
       });
       if (!ok) return;
+      showFullScreenLoader("Deleting ticket…");
       try {
         await ticketsApi.deleteTicket(ticketId);
         toast("Ticket deleted", { variant: "success" });
         window.location.replace("tickets.html");
       } catch (e) {
         toast("Could not delete ticket", { variant: "error" });
+      } finally {
+        hideFullScreenLoader();
+      }
+    });
+  }
+
+  const btnEdit = document.getElementById("detail-edit");
+  if (btnEdit) {
+    btnEdit.addEventListener("click", function () {
+      if (!currentTicket) return;
+      syncDetailEditInputsFromTicket(currentTicket);
+      setDetailTextEditMode(true);
+    });
+  }
+
+  const btnCancel = document.getElementById("detail-edit-cancel");
+  if (btnCancel) {
+    btnCancel.addEventListener("click", function () {
+      if (currentTicket) syncDetailEditInputsFromTicket(currentTicket);
+      setDetailTextEditMode(false);
+    });
+  }
+
+  const btnSave = document.getElementById("detail-edit-save");
+  if (btnSave) {
+    btnSave.addEventListener("click", async function () {
+      const ti = document.getElementById("detail-edit-title");
+      const cn = document.getElementById("detail-edit-customerName");
+      const ce = document.getElementById("detail-edit-customerEmail");
+      const de = document.getElementById("detail-edit-description");
+      const title = ti ? ti.value.trim() : "";
+      const customerName = cn ? cn.value.trim() : "";
+      const customerEmail = ce ? ce.value.trim() : "";
+      const description = de ? de.value.trim() : "";
+      if (title.length < 3) {
+        toast("Title must be at least 3 characters", { variant: "error" });
+        return;
+      }
+      if (customerName.length < 2) {
+        toast("Customer name is too short", { variant: "error" });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+        toast("Enter a valid customer email", { variant: "error" });
+        return;
+      }
+      if (description.length < 10) {
+        toast("Description must be at least 10 characters", { variant: "error" });
+        return;
+      }
+      showFullScreenLoader("Saving ticket…");
+      try {
+        await ticketsApi.updateTicket(ticketId, {
+          title: title,
+          customerName: customerName,
+          customerEmail: customerEmail,
+          description: description,
+          updatedAt: new Date().toISOString(),
+        });
+        toast("Ticket updated", { variant: "success" });
+        await loadAll();
+      } catch (e) {
+        toast("Could not save changes", { variant: "error" });
+      } finally {
+        hideFullScreenLoader();
       }
     });
   }

@@ -37,9 +37,35 @@
           <p class="detail-meta-line"><span class="detail-label">ID</span> <span id="detail-id"></span></p>
           <h2 class="detail-title" id="detail-title"></h2>
           <div class="detail-actions" role="group" aria-label="Ticket actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="detail-edit">Edit ticket</button>
             <button type="button" class="btn btn-secondary btn-sm" id="detail-delete">Delete ticket</button>
           </div>
         </header>
+
+        <section id="detail-edit-panel" class="detail-edit-panel" hidden aria-label="Edit ticket text fields">
+          <div class="field">
+            <label for="detail-edit-title">Title</label>
+            <input id="detail-edit-title" class="input-slot input-slot--live" type="text" autocomplete="off" maxlength="220">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="detail-edit-customerName">Customer name</label>
+              <input id="detail-edit-customerName" class="input-slot input-slot--live" type="text" autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="detail-edit-customerEmail">Customer email</label>
+              <input id="detail-edit-customerEmail" class="input-slot input-slot--live" type="email" autocomplete="email">
+            </div>
+          </div>
+          <div class="field">
+            <label for="detail-edit-description">Description</label>
+            <textarea id="detail-edit-description" class="input-slot input-slot--live" rows="8" maxlength="8000"></textarea>
+          </div>
+          <div class="detail-edit-panel__actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="detail-edit-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" id="detail-edit-save">Save changes</button>
+          </div>
+        </section>
 
         <section class="detail-grid" aria-label="Ticket fields">
           <div class="detail-field">
@@ -78,12 +104,12 @@
             <span class="detail-label">Updated</span>
             <span id="detail-updated" class="detail-value"></span>
           </div>
-          <div class="detail-field detail-field--block">
+          <div class="detail-field detail-field--block" id="detail-block-customer">
             <span class="detail-label">Customer</span>
             <div id="detail-customer-name" class="detail-value"></div>
             <div id="detail-customer-email" class="detail-value detail-value--muted"></div>
           </div>
-          <div class="detail-field detail-field--block detail-field--wide">
+          <div class="detail-field detail-field--block detail-field--wide" id="detail-block-description">
             <span class="detail-label">Description</span>
             <pre id="detail-description" class="detail-description"></pre>
           </div>

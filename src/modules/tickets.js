@@ -3,7 +3,8 @@ import { get } from "../api/client.js";
 import * as ticketsApi from "../api/tickets.js";
 import { formatDate } from "../utils/formatDate.js";
 import { debounce } from "../utils/debounce.js";
-import { openModal, toast, showFullScreenLoader, hideFullScreenLoader } from "./ui.js";
+import { openModal, toast, showFullScreenLoader, hideFullScreenLoader, confirmDialog } from "./ui.js";
+import { initArrowKeyListNav } from "./arrowKeyNav.js";
 import * as form from "./form.js";
 
 const PAGE_SIZE = 10;
@@ -116,7 +117,7 @@ function applyStateToForm() {
   }
 }
 
-function sortRows(rows, sortKey) {
+export function sortRows(rows, sortKey) {
   if (sortKey !== "priority") return rows;
   return rows.slice().sort(function (a, b) {
     const ra = PRIORITY_ORDER[a.priority] != null ? PRIORITY_ORDER[a.priority] : 99;
@@ -141,16 +142,16 @@ export function renderTable(tickets) {
     const t = tickets[i];
     const tr = document.createElement("tr");
     tr.dataset.ticketId = String(t.id);
-    const detailHref = "ticket-detail.html?id=" + encodeURIComponent(String(t.id));
+    tr.className = "ticket-row--interactive";
+    tr.setAttribute("tabindex", "0");
+    tr.setAttribute("aria-label", "Open ticket #" + t.id + ": " + (t.title || "Untitled"));
 
     const tdId = document.createElement("td");
-    const idLink = document.createElement("a");
-    idLink.className = "ticket-id-link";
-    idLink.href = detailHref;
-    idLink.textContent = String(t.id);
-    tdId.appendChild(idLink);
+    tdId.className = "ticket-id-cell";
+    tdId.textContent = String(t.id);
 
     const tdTitle = document.createElement("td");
+    tdTitle.className = "ticket-title-cell";
     tdTitle.textContent = t.title || "";
 
     const tdCust = document.createElement("td");
@@ -170,12 +171,13 @@ export function renderTable(tickets) {
 
     const tdActions = document.createElement("td");
     tdActions.className = "tickets-actions-cell";
-    const editLink = document.createElement("a");
-    editLink.href = detailHref;
-    editLink.className = "btn btn-sm btn-edit-ticket";
-    editLink.textContent = "Edit";
-    editLink.setAttribute("aria-label", "Open ticket #" + t.id + " to view and edit");
-    tdActions.appendChild(editLink);
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "tickets-delete-btn";
+    delBtn.textContent = "Delete";
+    delBtn.dataset.deleteTicket = String(t.id);
+    delBtn.setAttribute("aria-label", "Delete ticket #" + t.id);
+    tdActions.appendChild(delBtn);
 
     tr.appendChild(tdId);
     tr.appendChild(tdTitle);
@@ -190,6 +192,125 @@ export function renderTable(tickets) {
   tbody.replaceChildren(frag);
 }
 
+function escapeCsvCell(value) {
+  const s = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function ticketsToCsv(rows) {
+  const headers = [
+    "id",
+    "title",
+    "customerName",
+    "priority",
+    "status",
+    "assigneeLabel",
+    "createdAt",
+  ];
+  const lines = [headers.join(",")];
+  for (let i = 0; i < rows.length; i++) {
+    const t = rows[i];
+    const line = [
+      escapeCsvCell(t.id),
+      escapeCsvCell(t.title),
+      escapeCsvCell(t.customerName),
+      escapeCsvCell(t.priority),
+      escapeCsvCell(t.status),
+      escapeCsvCell(assigneeLabel(t.assignedTo)),
+      escapeCsvCell(t.createdAt),
+    ];
+    lines.push(line.join(","));
+  }
+  return lines.join("\n");
+}
+
+function downloadTextFile(filename, text, mime) {
+  const blob = new Blob([text], { type: mime || "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function exportFilteredTicketsCsv() {
+  if (!authApi.isAuthenticated()) return;
+  showFullScreenLoader("Building CSV…");
+  try {
+    const qs = buildQueryString(listState);
+    const res = await ticketsApi.listTickets(qs);
+    let rows = res.data || [];
+    rows = sortRows(rows, listState.sort);
+    if (rows.length === 0) {
+      toast("No tickets to export", { variant: "info" });
+      return;
+    }
+    const csv = ticketsToCsv(rows);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    downloadTextFile("tickets-" + stamp + ".csv", csv, "text/csv;charset=utf-8");
+    toast("Exported " + rows.length + " ticket(s)", { variant: "success" });
+  } catch (e) {
+    toast("Export failed", { variant: "error" });
+  } finally {
+    hideFullScreenLoader();
+  }
+}
+
+async function deleteTicketFromList(id) {
+  const ok = await confirmDialog("Delete ticket #" + id + "? This cannot be undone.", {
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  showFullScreenLoader("Deleting ticket…");
+  try {
+    await ticketsApi.deleteTicket(id);
+    toast("Ticket deleted", { variant: "success" });
+    await refresh();
+  } catch (e) {
+    toast("Delete failed", { variant: "error" });
+  } finally {
+    hideFullScreenLoader();
+  }
+}
+
+function wireTicketTableInteractions() {
+  const tbody = document.getElementById("tickets-tbody");
+  if (!tbody || tbody.dataset.interactionsWired === "true") return;
+  tbody.dataset.interactionsWired = "true";
+
+  tbody.addEventListener("click", function (e) {
+    if (e.target.closest(".tickets-delete-btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const btn = e.target.closest("[data-delete-ticket]");
+      if (!btn) return;
+      const id = parseInt(btn.getAttribute("data-delete-ticket"), 10);
+      if (!(id >= 1)) return;
+      void deleteTicketFromList(id);
+      return;
+    }
+    const tr = e.target.closest("tr[data-ticket-id]");
+    if (!tr) return;
+    const id = tr.getAttribute("data-ticket-id");
+    window.location.href = "ticket-detail.html?id=" + encodeURIComponent(id);
+  });
+
+  tbody.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tr = e.target.closest("tr[data-ticket-id]");
+    if (!tr || e.target.closest(".tickets-delete-btn")) return;
+    e.preventDefault();
+    const id = tr.getAttribute("data-ticket-id");
+    window.location.href = "ticket-detail.html?id=" + encodeURIComponent(id);
+  });
+}
+
 export async function refresh() {
   if (!els) return;
   if (!authApi.isAuthenticated()) {
@@ -199,17 +320,16 @@ export async function refresh() {
 
   if (els.search) listState.q = els.search.value.trim();
 
-  const loading = document.getElementById("tickets-loading");
   const errBox = document.getElementById("tickets-error");
   const errMsg = document.getElementById("tickets-error-message");
   const empty = document.getElementById("tickets-empty");
   const wrap = document.getElementById("tickets-table-wrap");
 
-  loading.hidden = false;
-  errBox.hidden = true;
-  empty.hidden = true;
-  wrap.hidden = true;
+  if (errBox) errBox.hidden = true;
+  if (empty) empty.hidden = true;
+  if (wrap) wrap.hidden = true;
 
+  showFullScreenLoader("Loading tickets…");
   try {
     if (!usersById) {
       try {
@@ -260,12 +380,12 @@ export async function refresh() {
     syncUrlToAddressBar();
 
     if (pageRows.length === 0) {
-      empty.hidden = false;
+      if (empty) empty.hidden = false;
       return;
     }
 
     renderTable(pageRows);
-    wrap.hidden = false;
+    if (wrap) wrap.hidden = false;
   } catch (err) {
     const status = err && err.status != null ? " (" + err.status + ")" : "";
     const aborted = err && err.name === "AbortError";
@@ -276,9 +396,9 @@ export async function refresh() {
     if (errMsg) {
       errMsg.textContent = badFetch ? "json-server is offline" + status : "failed to load tickets" + status + ".";
     }
-    errBox.hidden = false;
+    if (errBox) errBox.hidden = false;
   } finally {
-    loading.hidden = true;
+    hideFullScreenLoader();
   }
 }
 
@@ -499,6 +619,8 @@ export function initTicketsList() {
     sort: document.getElementById("tickets-sort"),
   };
 
+  wireTicketTableInteractions();
+
   if (els.search) {
     els.search.addEventListener("input", function () {
       listState.q = els.search.value.trim();
@@ -569,6 +691,20 @@ export function initTicketsList() {
     document.getElementById("tickets-new").addEventListener("click", function () {
       openCreateTicketModal();
     });
+
+  document.getElementById("tickets-export-csv") &&
+    document.getElementById("tickets-export-csv").addEventListener("click", function () {
+      void exportFilteredTicketsCsv();
+    });
+
+  initArrowKeyListNav({
+    root: document.getElementById("view-tickets"),
+    itemSelector: "tr.ticket-row--interactive",
+    isEnabled: function () {
+      const wrap = document.getElementById("tickets-table-wrap");
+      return !!(wrap && !wrap.hidden);
+    },
+  });
 
   refresh();
 }

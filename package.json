@@ -8,13 +8,17 @@
     "api": "json-server --watch seedData.json --port 3001 --delay 200",
     "start": "json-server --watch seedData.json --host 0.0.0.0 --port ${PORT:-3001}",
     "serve": "live-server . --port=8080 --no-browser",
-    "dev": "concurrently --names \"api,ui\" --prefix-colors \"yellow,cyan\" \"npm:api\" \"npm:serve\""
+    "dev": "concurrently --names \"api,ui\" --prefix-colors \"yellow,cyan\" \"npm:api\" \"npm:serve\"",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "json-server": "^0.17.4"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.5",
     "concurrently": "^8.2.2",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "vitest": "^3.0.5"
   }
 }

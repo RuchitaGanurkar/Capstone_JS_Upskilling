@@ -1,6 +1,6 @@
 let toastHost = null;
-const TOAST_MAX = 5;
-const TOAST_STAGGER_MS = 80;
+const TOAST_MAX = 8;
+const TOAST_STAGGER_MS = 70;
 
 function getToastHost() {
   if (toastHost && toastHost.isConnected) return toastHost;
@@ -77,9 +77,11 @@ export function hideFullScreenLoader() {
 export function openModal(opts) {
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
+  backdrop.style.willChange = "opacity";
 
   const dialog = document.createElement("div");
   dialog.className = "modal-dialog";
+  dialog.style.willChange = "opacity, transform";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
 
